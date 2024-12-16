@@ -1,82 +1,93 @@
 use crate::Trait;
 use std::fmt;
+use num_traits::ops::mul_add::MulAdd;
 
 pub struct Vector<T, const S: usize> {
-  values:[T; S]
+    values: [T; S],
 }
 
 impl<T: Trait, const S: usize> fmt::Display for Vector<T, S> {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    let mut result = String::new();
-    result.push_str("[");
-    for i in 0..S {
-      result.push_str(&format!("{}", self.values[i]));
-      if i != S - 1 {
-        result.push_str(&format!(", "));
-      }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut result = String::new();
+        result.push_str("[");
+        for i in 0..S {
+            result.push_str(&format!("{}", self.values[i]));
+            if i != S - 1 {
+                result.push_str(&format!(", "));
+            }
+        }
+        result.push_str("]");
+        write!(f, "{}", result)
     }
-    result.push_str("]");
-    write!(f, "{}", result)
-  }
 }
 
 impl<T: Trait, const S: usize> fmt::Debug for Vector<T, S> {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    let mut result = String::new();
-    result.push_str("[");
-    for i in 0..S {
-      result.push_str(&format!("{}", self.values[i]));
-      if i != S - 1 {
-        result.push_str(&format!(", "));
-      }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut result = String::new();
+        result.push_str("[");
+        for i in 0..S {
+            result.push_str(&format!("{}", self.values[i]));
+            if i != S - 1 {
+                result.push_str(&format!(", "));
+            }
+        }
+        result.push_str("]");
+        write!(f, "{}", result)
     }
-    result.push_str("]");
-    write!(f, "{}", result)
-  }
 }
 
 impl<T: Trait, const S: usize> PartialEq for Vector<T, S> {
-  fn eq(&self, other: &Self) -> bool {
-    for i in 0..S {
-      if self.values[i] != other.values[i] {
-        return false;
-      }
+    fn eq(&self, other: &Self) -> bool {
+        for i in 0..S {
+            if self.values[i] != other.values[i] {
+                return false;
+            }
+        }
+        return true;
     }
-    return true;
-  }
 }
 
 impl<T: Trait, const S: usize> Copy for Vector<T, S> {}
 
 impl<T: Trait, const S: usize> Clone for Vector<T, S> {
-  fn clone(&self) -> Vector<T, S> {
-    let v = Vector::from(self.values);
-    return v;
-  }
+    fn clone(&self) -> Vector<T, S> {
+        let v = Vector::from(self.values);
+        return v;
+    }
 }
 
-impl<T: Trait, const S: usize> Vector<T, S> { 
-  pub fn from(v: [T; S]) -> Vector<T, S> {
-    return Vector {
-      values: v
-    };
-  }
-
-  pub fn add(&mut self, v: &Vector<T, S>) {
-    for i in 0..S {
-      self.values[i] += v.values[i];
+impl<T: Trait, const S: usize> Vector<T, S> {
+    pub fn from(v: [T; S]) -> Vector<T, S> {
+        return Vector { values: v };
     }
-  }
 
-  pub fn sub(&mut self, v: &Vector<T, S>) {
-    for i in 0..S {
-      self.values[i] -= v.values[i];
+    pub fn add(&mut self, v: &Vector<T, S>) {
+        for i in 0..S {
+            self.values[i] += v.values[i];
+        }
     }
-  }
 
-  pub fn scl(&mut self, a: T) {
-    for i in 0..S {
-      self.values[i] = self.values[i] * a;
+    pub fn sub(&mut self, v: &Vector<T, S>) {
+        for i in 0..S {
+            self.values[i] -= v.values[i];
+        }
     }
+
+    pub fn scl(&mut self, a: T) {
+        for i in 0..S {
+            self.values[i] = self.values[i] * a;
+        }
+    }
+}
+
+impl<T: Trait, const S: usize> MulAdd<T, Vector<T, S>> for Vector<T, S> {
+  type Output = Vector<T, S>;
+
+  fn mul_add(self, a: T, b: Vector<T, S>) -> Vector<T, S> {
+      let mut res = [T::default(); S];
+      for i in 0..S {
+          res[i] = self.values[i].mul_add(T::from(a), b.values[i]);
+      }
+      Vector::from(res)
   }
 }
